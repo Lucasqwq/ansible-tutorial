@@ -1,0 +1,135 @@
+---
+
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: updates repo cache (CentOS)
+    tags: always
+    dnf:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "CentOS"
+
+  - name: updates repo cache (Ubuntu)
+    tags: always
+    apt:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Ubuntu"
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: add ssh key for pewpew
+    tags: always
+    authorized_key:
+      user: pewpew
+      key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDxy+7SWFvjwPWlCLsDvFDm9TVq22uEn8O5sNXTJ9YdqbpO5Fh3dcfRr8Pp7qBGqoiT3fLzTWr9P1mtprd5SbSZA5KXPSjJLsT1q2OgqoLOxUfi5LDUMzt3oziiNhLo4ytikk6NNCsH271ccforu8jWWnzIR9S8yeuhVgQEEQF+w6kqoI/DuBumzJjCnw0wLNERRAB9ZLM8gkB/2YKadFLQpN4d8QDAL9oSZBu0b2TaPD9oAf1pX3kIArTWhI51oN3N189fZSMm25+Kl88KQX/8/xQlxhhUD2Vt9u0H+hlGjqLKoUjOnt8uEhJTLS5LHG1FnihKgKUi+AuYFEXGPA8DQ7Z0McUp0Z2c/g0RZ++4iSM+MUM53CR9GioEXwTQdkai1j3+f85Im6eBY0F9QBX9Ab/vYUL7m335ljwW1lvU9ft996i34Q4LEFFJ96zGLNG3H/DvIwdX1ZVGe8adwyEox4r0tpa5Q+g0pl8w2pzSdk2unTFfYMNCqUGNLRLFvys= lucas.lien@C3045-LucasLien.local"
+
+
+#- hosts: workstations
+#  become: true
+#  tasks:
+#
+#  - name: install unzip
+#    package:
+#      name: unzip
+#
+#  - name: install terraform
+#    unarchive:
+#      src: https://releases.hashicorp.com/terraform/0.12.28/terraform_0.12.28_linux_amd64.zip
+#      dest: /usr/local/bin
+#      remote_src: yes
+#      mode: 0755
+#      owner: root
+#      group: root
+
+
+
+- hosts: web_servers
+  become: true
+  tasks:
+
+  - name: install apache2 and php packages for Ubuntu servers
+    tags: apache,apache2,ubuntu
+    apt:                                       #"package" would be any of the module manager depending on the server system
+      name:                                    #like CentOS,Ubuntu... 
+        - apache2
+        - libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install apache and php for CentOS servers
+    tags: apache,httpd,centos
+    dnf:                                       #package would be any of the module manager depending on the server system
+      name:                                    #like CentOS,Ubuntu...
+        - httpd
+        - php
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+  - name: start httpd (CentOS)
+    tags: apache,centos,httpd
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution == "CentOS"
+
+  - name: change e-mail address for admin
+    tags: apache,centos,httpd
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^ServerAdmin'                   #find the line that you want to edit
+      line: ServerAdmin somebody@somewhere.net
+    when: ansible_distribution == "CentOS"
+    register: httpd
+
+  - name: restart httpd (CentOS)
+    tags: apache,centos,httpd
+    service:
+      name: httpd
+      state: restarted
+    when: httpd.changed                        #If the httpd variable above had changed,this task will execute.
+                                               #Changed means that the state has changed in the playbook-running process.
+  - name: copy default html file for site
+    tags: apache,apache2,httpd
+    copy:
+      src: default_site.html
+      dest: /var/www/html/index.html
+      owner: root
+      group: root
+      mode: 0644
+
+
+- hosts: db_servers
+  become: true
+  tasks:
+
+  - name: install mariadb pachage (CentOS)
+    tags: centos,db,mariadb
+    dnf:
+      name: mariadb
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+  - name: install mariadb package (Ubuntu)
+    tags: db,mariadb,ubuntu
+    apt:
+      name: mariadb-server
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+
+
+- hosts: file_servers
+  become: true
+  tasks:
+
+  - name: install samba package
+    tags: smaba
+    package:
+      name: samba
+      state: latest
