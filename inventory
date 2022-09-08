@@ -7,5 +7,5 @@ lucas2@172.21.103.104
 [file_servers]
 lucas3@172.21.103.116
 
-[workstations]
-172.21.103.165 ansible_ssh_user=lucas.lien ansible_become_password=smilelucas_66
+#[workstations]
+#172.21.103.165 ansible_ssh_user=lucas.lien ansible_become_password=smilelucas_66
