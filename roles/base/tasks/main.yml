@@ -2,3 +2,13 @@
   authorized_key:
     user: pewpew
     key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDxy+7SWFvjwPWlCLsDvFDm9TVq22uEn8O5sNXTJ9YdqbpO5Fh3dcfRr8Pp7qBGqoiT3fLzTWr9P1mtprd5SbSZA5KXPSjJLsT1q2OgqoLOxUfi5LDUMzt3oziiNhLo4ytikk6NNCsH271ccforu8jWWnzIR9S8yeuhVgQEEQF+w6kqoI/DuBumzJjCnw0wLNERRAB9ZLM8gkB/2YKadFLQpN4d8QDAL9oSZBu0b2TaPD9oAf1pX3kIArTWhI51oN3N189fZSMm25+Kl88KQX/8/xQlxhhUD2Vt9u0H+hlGjqLKoUjOnt8uEhJTLS5LHG1FnihKgKUi+AuYFEXGPA8DQ7Z0McUp0Z2c/g0RZ++4iSM+MUM53CR9GioEXwTQdkai1j3+f85Im6eBY0F9QBX9Ab/vYUL7m335ljwW1lvU9ft996i34Q4LEFFJ96zGLNG3H/DvIwdX1ZVGe8adwyEox4r0tpa5Q+g0pl8w2pzSdk2unTFfYMNCqUGNLRLFvys= lucas.lien@C3045-LucasLien.local"
+
+- name: generate sshd_config file feom template
+  tags: ssh
+  template:
+    src: "{{ ssh_template_file }}"
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart_sshd
